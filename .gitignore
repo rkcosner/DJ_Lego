@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Generated demo asset (regenerate with scripts/make_demo_audio.py)
+assets/demo_tone.wav
+
+# OS / editor
+.DS_Store
+Thumbs.db

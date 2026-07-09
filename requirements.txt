@@ -1,0 +1,14 @@
+# DJ Lego — all pip-installable wheels, no system ffmpeg/PortAudio needed.
+# Pinned to versions verified on Python 3.14; newer patch releases are fine.
+numpy>=2.0
+scipy>=1.13
+sounddevice>=0.5      # PortAudio playback (wheel bundles PortAudio on Win/Mac)
+av>=12.0              # PyAV: decodes MP4/MP3/etc. (wheel bundles ffmpeg)
+PySide6>=6.6          # Qt GUI
+matplotlib>=3.8       # embedded Bode / FFT plots
+
+# optional: LEGO Education motor/controller input (drive the knobs with LEGO)
+# legoeducation>=1.0
+
+# dev-only
+pytest>=8.0
