@@ -6,6 +6,8 @@ sounddevice>=0.5      # PortAudio playback (wheel bundles PortAudio on Win/Mac)
 av>=12.0              # PyAV: decodes MP4/MP3/etc. (wheel bundles ffmpeg)
 PySide6>=6.6          # Qt GUI
 matplotlib>=3.8       # embedded Bode / FFT plots
+pyaudio>=0.2.13
+legoeducation
 
 # optional: LEGO Education motor/controller input (drive the knobs with LEGO)
 # legoeducation>=1.0
