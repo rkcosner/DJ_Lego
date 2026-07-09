@@ -26,10 +26,19 @@ it's coming out of the speakers.
 You need **Python 3.9+**. From this folder:
 
 ```bash
+git clone git@github.com:rkcosner/DJ_Lego.git
+
+cd DJ_lego 
+
 python -m venv .venv
+
 # Windows:
 .venv\Scripts\activate
-# macOS / Linux:
+# macOS
+brew install portaudio
+source .venv/bin/activate
+# Linux:
+sudo apt install portaudio19-dev
 source .venv/bin/activate
 
 pip install -r requirements.txt
