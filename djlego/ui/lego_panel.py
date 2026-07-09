@@ -140,6 +140,7 @@ class LegoPanel(QWidget):
             self.status.setText("Enter the card serial (or tick Simulate).")
             return
         self.status.setText("Connecting…" if not simulate else "Simulating…")
+        self.connect_btn.setEnabled(False)  # re-enabled by tick() once resolved
         self.manager.connect(kind, color_name, color_const, serial, simulate)
 
     # -------------------------------------------------------- device rows --
@@ -210,8 +211,19 @@ class LegoPanel(QWidget):
         knob_id = combo.currentData()
         if knob_id is None:
             self.mappings.pop((key, chan), None)
-        else:
-            self.mappings[(key, chan)] = knob_id
+            return
+        # One input per knob: if another channel already drives this knob, take
+        # it away from that channel (reset its dropdown to "not mapped").
+        for other in [kc for kc, kid in self.mappings.items()
+                      if kid == knob_id and kc != (key, chan)]:
+            self.mappings.pop(other, None)
+            w = self._rows.get(other)
+            if w is not None:
+                c = w["combo"]
+                c.blockSignals(True)
+                c.setCurrentIndex(0)
+                c.blockSignals(False)
+        self.mappings[(key, chan)] = knob_id
 
     def _disconnect(self, key: str):
         # Drop any mappings for this device, then disconnect.
@@ -239,10 +251,15 @@ class LegoPanel(QWidget):
                 self._rebuild_devices()
                 rebuilt = True
             elif kind == "disconnected":
+                self.status.setText("Disconnected.")
                 self._rebuild_devices()
                 rebuilt = True
             elif kind == "error":
                 self.status.setText(f"Connection failed — {detail}")
+            elif kind == "busy":
+                self.status.setText("That device is already connected/connecting.")
+        # The Connect button is live only when nothing is mid-connect.
+        self.connect_btn.setEnabled(not self.manager.busy())
         if rebuilt:
             return  # widgets just changed; read values next tick
 

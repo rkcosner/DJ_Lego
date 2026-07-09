@@ -2,15 +2,16 @@
 # Pinned to versions verified on Python 3.14; newer patch releases are fine.
 numpy>=2.0
 scipy>=1.13
-sounddevice>=0.5      # PortAudio playback (wheel bundles PortAudio on Win/Mac)
+sounddevice>=0.5      # PortAudio playback. Wheel bundles PortAudio on Win/Mac;
+                      # on LINUX install the system lib first:
+                      #   sudo apt install portaudio19-dev
 av>=12.0              # PyAV: decodes MP4/MP3/etc. (wheel bundles ffmpeg)
 PySide6>=6.6          # Qt GUI
 matplotlib>=3.8       # embedded Bode / FFT plots
-pyaudio>=0.2.13
-legoeducation
 
-# optional: LEGO Education motor/controller input (drive the knobs with LEGO)
-# legoeducation>=1.0
+# LEGO Education motor/controller input (needs Python 3.11+). Drop this line if
+# students won't use LEGO hardware — Simulate mode works without it.
+legoeducation>=1.0.6
 
 # dev-only
 pytest>=8.0

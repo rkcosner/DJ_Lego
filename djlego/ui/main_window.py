@@ -86,7 +86,7 @@ class TFReadout(QWidget):
         for T, g in delays:
             parts.append(f"· 1/(1 − {g:.2g}·e^(−{T:.3g}s))")
         for a in distortions:
-            parts.append(f",  then  tanh({a:.2g}·x)")
+            parts.append(f",  then  tanh({a:.2g}·x)/{a:.2g}")
         self.extra.setText("  ".join(parts))
 
 
@@ -123,7 +123,7 @@ class MainWindow(QMainWindow):
         self._update_plots()  # initial draw right away
 
         self._timer = QTimer(self)
-        self._timer.setInterval(33)  # ~30 fps for the live FFT + transport
+        self._timer.setInterval(40)  # ~25 fps for live FFT + transport + LEGO
         self._timer.timeout.connect(self._on_tick)
         self._timer.start()
 
@@ -504,8 +504,9 @@ class MainWindow(QMainWindow):
             if b.spec.effect == "delay"
         ]
         distortions = [b.params["a"] for b in self.blocks if b.spec.effect == "distort"]
-        # More points so the comb teeth resolve; delays make the response wig.
-        f, mag_db, _phase = bode(num, den, delays=delays, n=1400)
+        # Only pay for the fine grid when a delay comb needs resolving.
+        n = 1400 if delays else 500
+        f, mag_db, _phase = bode(num, den, delays=delays, n=n)
         self.analysis.update_bode(f, mag_db)
         self.tf_readout.update_tf(num, den, delays, distortions)
 

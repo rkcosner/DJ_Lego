@@ -23,7 +23,8 @@ it's coming out of the speakers.
 
 ## Setup
 
-You need **Python 3.9+**. From this folder:
+You need **Python 3.11+** (3.14 recommended — it's what this is tested on; the
+optional LEGO package requires 3.11+). From this folder:
 
 ```bash
 git clone git@github.com:rkcosner/DJ_Lego.git

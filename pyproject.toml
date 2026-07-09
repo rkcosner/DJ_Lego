@@ -11,13 +11,13 @@ dependencies = [
     "av>=12.0",          # PyAV: MP4/MP3 decode (wheel bundles ffmpeg)
     "PySide6>=6.6",      # Qt GUI
     "matplotlib>=3.8",   # embedded Bode / FFT plots
+    # LEGO motor/controller input — the whole class uses it, so it's core.
+    # Pin >=1.0.6 (supports Python 3.11+); 1.0.5 needs 3.14 and breaks the lock.
+    "legoeducation>=1.0.6",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
-# Optional: drive the knobs with LEGO Education motors/controllers over BLE.
-# Pin >=1.0.6 (supports Python 3.11+); 1.0.5 needs 3.14 and breaks the lock.
-lego = ["legoeducation>=1.0.6"]
 
 [project.scripts]
 djlego = "djlego.app:main"

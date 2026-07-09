@@ -171,6 +171,8 @@ class LegoManager:
     devices: dict[str, ConnectedDevice] = field(default_factory=dict)
     _lock: threading.Lock = field(default_factory=threading.Lock)
     _events: list[tuple[str, str]] = field(default_factory=list)  # (kind, detail)
+    _pending: set[str] = field(default_factory=set)  # connects in flight
+    _cancelled: set[str] = field(default_factory=set)  # disconnected mid-connect
 
     # -- events (drained by the UI so it can react on the main thread) -------
 
@@ -183,18 +185,27 @@ class LegoManager:
         with self._lock:
             self._events.append((kind, detail))
 
+    def busy(self) -> bool:
+        """True while any connection attempt is still in flight."""
+        with self._lock:
+            return bool(self._pending)
+
     # -- connecting ----------------------------------------------------------
 
     def connect(self, kind: str, color_name: str, color_const, serial: str, simulate: bool):
         """Start connecting a device.  Real connections run on a worker thread
-        (BLE scanning blocks); simulated ones are instant."""
+        (BLE scanning blocks); simulated ones are instant.  Ignores a request
+        for a device that is already connected or currently connecting."""
         key = f"{kind}:{color_name}:{serial or 'sim'}"
+        with self._lock:
+            if key in self.devices or key in self._pending:
+                self._events.append(("busy", key))
+                return
+            self._pending.add(key)
+            self._cancelled.discard(key)
+
         if simulate or not LEGO_AVAILABLE:
-            dev = ConnectedDevice(key, kind, color_name, serial,
-                                  MockDevice(kind), simulated=True)
-            with self._lock:
-                self.devices[key] = dev
-            self._emit("connected", key)
+            self._finish_connect(key, MockDevice(kind), kind, color_name, serial, True)
             return
 
         def _worker():
@@ -206,18 +217,42 @@ class LegoManager:
                 }[kind]
                 obj = ctor()
                 obj.connect(card_color=color_const, card_serial=str(serial))
-                dev = ConnectedDevice(key, kind, color_name, serial, obj)
-                with self._lock:
-                    self.devices[key] = dev
-                self._emit("connected", key)
             except Exception as exc:  # noqa: BLE001
+                with self._lock:
+                    self._pending.discard(key)
+                    self._cancelled.discard(key)
                 self._emit("error", f"{key}: {exc}")
+                return
+            self._finish_connect(key, obj, kind, color_name, serial, False)
 
         threading.Thread(target=_worker, daemon=True).start()
+
+    def _finish_connect(self, key, obj, kind, color_name, serial, simulated):
+        """Commit a freshly-connected device, or drop it if it was cancelled
+        (the user hit disconnect while the connect was still in flight)."""
+        with self._lock:
+            self._pending.discard(key)
+            cancelled = key in self._cancelled
+            self._cancelled.discard(key)
+            if not cancelled:
+                self.devices[key] = ConnectedDevice(
+                    key, kind, color_name, serial, obj, simulated=simulated
+                )
+        if cancelled:
+            try:
+                obj.disconnect()
+            except Exception:  # noqa: BLE001
+                pass
+            self._emit("disconnected", key)
+        else:
+            self._emit("connected", key)
 
     def disconnect(self, key: str):
         with self._lock:
             dev = self.devices.pop(key, None)
+            if key in self._pending:
+                # Still connecting -> tell the worker to drop it when it lands.
+                self._cancelled.add(key)
         if dev is not None:
             try:
                 dev.obj.disconnect()
@@ -226,7 +261,7 @@ class LegoManager:
             self._emit("disconnected", key)
 
     def disconnect_all(self):
-        for key in list(self.devices):
+        for key in list(self.devices) + list(self._pending):
             self.disconnect(key)
 
     def snapshot(self) -> list[ConnectedDevice]:

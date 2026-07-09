@@ -180,11 +180,12 @@ BLOCKS: dict[str, BlockSpec] = {
         BlockSpec(
             "distortion",
             "Saturation (nonlinear)",
-            "Nonlinear waveshaper:  y[n] = tanh(a·x[n]).\n"
-            "Superposition fails, so there is NO transfer function and nothing "
-            "to draw on the Bode plot. Raising the input gain a drives the "
-            "signal into the tanh, synthesising new harmonics you can watch "
-            "appear in the output spectrum.",
+            "Nonlinear waveshaper:  y[n] = tanh(a·x[n]) / a.  The 1/a makeup "
+            "means more drive = more grit, NOT more volume (it can never get "
+            "louder, since tanh(u) ≤ u).\nSuperposition fails, so there is NO "
+            "transfer function and nothing to draw on the Bode plot. Raising the "
+            "input gain a drives the signal harder into the tanh, synthesising "
+            "new harmonics you can watch appear in the output spectrum.",
             (ParamSpec("a", "a", 1.0, 50.0, 6.0, log=True),),
             _tf_identity,
             effect="distort",

@@ -110,6 +110,7 @@ class AudioEngine:
                 channels=self.channels,
                 blocksize=BLOCKSIZE,
                 dtype="float32",
+                latency="high",  # bigger buffer = fewer dropouts on slow CPUs
                 callback=self._callback,
             )
             self._stream.start()
@@ -300,7 +301,11 @@ class AudioEngine:
         # clipper creates (and the echoes) show up in the spectrum.
         for stage in plan:
             if stage[0] == "distort":
-                out = np.tanh(out * stage[1])
+                a = stage[1]
+                # Pre-gain a into the clipper, post-scale by 1/a.  Since
+                # tanh(u) <= u this can never raise the level (more drive = more
+                # harmonics, not more volume); small signals pass at ~unity.
+                out = np.tanh(out * a) / a
             else:
                 _, line, D, g = stage
                 out = line.process(out, D, g)
