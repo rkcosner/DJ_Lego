@@ -34,7 +34,11 @@ python -m venv .venv
 
 # Windows:
 .venv\Scripts\activate
-# macOS / Linux:
+# macOS
+brew install portaudio
+source .venv/bin/activate
+# Linux:
+sudo apt install portaudio19-dev
 source .venv/bin/activate
 
 pip install -r requirements.txt
