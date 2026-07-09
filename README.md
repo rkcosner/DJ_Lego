@@ -27,8 +27,11 @@ You need **Python 3.9+**. From this folder:
 
 ```bash
 git clone git@github.com:rkcosner/DJ_Lego.git
+
 cd DJ_lego 
+
 python -m venv .venv
+
 # Windows:
 .venv\Scripts\activate
 # macOS / Linux:
